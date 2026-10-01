@@ -11,8 +11,8 @@ window.NW_DATA = {
   ],
 
   start: { time: "08:30", title: "Start: Zuhause", place: "Bornheim" },
-  end: { time: "13:07", title: "Ende: Schule (Tochter)", place: "Ostend · spätestens 13:15", buffer: "8 min Puffer" },
-  km: 31,
+  end: { time: "12:27", title: "Ende: Schule (Tochter)", place: "spätestens 13:15", buffer: "48 min Puffer" },
+  km: 24,
 
   visits: [
     {
@@ -39,7 +39,7 @@ window.NW_DATA = {
       family: "Familie Krüger", mother: "Julia Krüger", child: "Jonas",
       district: "Seckbach", address: "Wilhelmshöher Straße 45, 60389 Frankfurt",
       reason: "Abschlussbesuch 12 Wochen", type: "abschluss",
-      hints: [{ level: "accent", text: "Baby-Urkunde fällig" }],
+      hints: [{ level: "accent", text: "Urkunde fällig" }],
       prep: { level: "info", text: "Letzter Besuch der Betreuung: Baby-Urkunde gemeinsam mit der Familie ansehen und drucken." },
       baby: { birth: 3620, birthLabel: "10.07., 23:18 Uhr", last: 5390, lastDay: "10.09.", lastTemp: 36.9, lastFeeds: 7, lastBreast: ["gut"], day: 83, lastLength: 59, lastHead: 39.5 },
       mum: { lastTemp: 36.7, lastLochia: "keine", lastMood: "gut" },
@@ -55,23 +55,13 @@ window.NW_DATA = {
       baby: { birth: 3540, birthLabel: "21.09., 14:05 Uhr", last: 3480, lastDay: "Mi", lastTemp: 36.9, lastFeeds: 10, lastBreast: ["Milchstau"], day: 10 },
       mum: { lastTemp: 37.6, lastLochia: "fusca", lastMood: "erschöpft" },
     },
-    {
-      id: "schmitt", time: "12:24", until: "12:59", duration: 35, driveBefore: 9, km: 3.4,
-      family: "Familie Schmitt", mother: "Katrin Schmitt", child: "Paul",
-      district: "Riederwald", address: "Schäfflestraße 12, 60386 Frankfurt",
-      reason: "Wochenbett Tag 21", type: "wochenbett",
-      hints: [{ level: "caution", text: "2 Unterschriften fehlen" }],
-      prep: { level: "caution", text: "HebSet-Bogen: 2 Unterschriften fehlen (17. und 24.09.). Bogen mitnehmen und unterschreiben lassen." },
-      baby: { birth: 3290, birthLabel: "10.09., 03:51 Uhr", last: 3760, lastDay: "24.09.", lastTemp: 36.8, lastFeeds: 8, lastBreast: ["gut"], day: 21 },
-      mum: { lastTemp: 36.6, lastLochia: "flava", lastMood: "gut" },
-    },
   ],
-  lastDrive: 8,
+  lastDrive: 12,
 
   tasks: [
-    { n: 2, label: "Dokumentationen nicht abgeschlossen", icon: "file", tone: "c" },
-    { n: 1, label: "Baby-Urkunde fällig (Jonas Krüger)", icon: "award", tone: "a" },
-    { n: 3, label: "HebSet-Bögen: Unterschriften fehlen", icon: "pen", tone: "p" },
+    { n: 2, label: "Dokus offen", sub: "von Montag und Dienstag", icon: "file", tone: "c" },
+    { n: 1, label: "Urkunde", sub: "fällig für Jonas Krüger", icon: "award", tone: "a" },
+    { n: 3, label: "Unterschriften", sub: "fehlen auf HebSet-Bögen", icon: "pen", tone: "p" },
   ],
 
   handovers: [

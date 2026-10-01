@@ -88,12 +88,13 @@
   function toast(text, icon = "checkc") {
     S.toast = { text, icon };
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => { S.toast = null; render(); }, 3600);
+    // Nur den Toast entfernen – kein komplettes Neuzeichnen (würde z. B. eine laufende Unterschrift löschen)
+    toastTimer = setTimeout(() => { S.toast = null; document.querySelectorAll(".toast").forEach((t) => t.remove()); }, 3600);
   }
   function syncPending() {
     S.sync = "pending";
     clearTimeout(syncTimer);
-    syncTimer = setTimeout(() => { S.sync = "ok"; render(); }, 2500);
+    syncTimer = setTimeout(() => { S.sync = "ok"; document.querySelectorAll(".sync").forEach((el) => { el.outerHTML = syncChip(); }); }, 2500);
   }
 
   // ---------- Rahmen ----------
@@ -145,14 +146,15 @@
       const chips = [];
       if (st === "done") chips.push(`<span class="chip success">${ic("check", "xs")} Dokumentiert</span>`);
       else {
+        // Ruhige Zeitleiste: höchstens ein Chip pro Stopp, Vertretung hat Vorrang
         if (v.substitute) chips.push(`<span class="chip vertretung-${v.substitute.key}" title="Vertretung für ${v.substitute.for}">${ic("swap", "xs")} Vertretung</span>`);
-        v.hints.forEach((h) => chips.push(chipFor(h)));
+        else if (v.hints[0]) chips.push(chipFor(v.hints[0]));
       }
       html += `<li><button class="stop ${cls}" data-act="select" data-id="${v.id}">
         <span class="t num">${v.time}</span>
         <span class="dot">${st === "done" ? ic("check") : ""}</span>
         <span class="body"><span class="ttl">${v.family}</span>
-          <span class="sub">${v.child ? `Baby ${v.child}` : v.mother.split(" ")[0]} · ${v.reason}</span>
+          <span class="sub">${v.reason}</span>
           ${chips.length ? `<span class="chips">${chips.join("")}</span>` : ""}</span>
       </button></li>`;
     });
@@ -163,28 +165,25 @@
     return `<section class="card timeline" aria-label="Tagesroute">
       <div class="head"><span class="section-title" style="margin:0">${ic("route", "sm")} Deine Route</span><span class="small num">${done} von ${D.visits.length} erledigt · ${D.km} km</span></div>
       <ol class="stops">${html}</ol>
-      <div class="foot"><span>${ic("cloud", "xs")} Route und Akten offline verfügbar</span></div>
     </section>`;
   }
 
   function lastValueFact(v) {
     if (v.type === "vorsorge") {
       const p = v.preg;
-      return `<div class="fact"><div class="k">Letzter Blutdruck (${p.lastDay})</div><div class="v num">${p.lastSys}/${p.lastDia}</div><div class="d">mmHg · Gewicht ${fmt1(p.lastWeight)} kg</div></div>
-        <div class="fact"><div class="k">Schwangerschaft</div><div class="v num">SSW ${p.ssw}</div><div class="d">ET ${p.et}</div></div>`;
+      return `<div class="fact"><div class="k">Letzter Blutdruck (${p.lastDay})</div><div class="v num">${p.lastSys}/${p.lastDia} mmHg</div><div class="d">Gewicht ${fmt1(p.lastWeight)} kg · ET ${p.et}</div></div>`;
     }
     const b = v.baby;
     const diff = ((b.last - b.birth) / b.birth) * 100;
     const diffTxt = (diff > 0 ? "+" : "−") + fmt1(Math.abs(diff)) + " % zur Geburt";
-    return `<div class="fact"><div class="k">Letztes Gewicht ${v.child} (${b.lastDay})</div><div class="v num">${fmtG(b.last)} g</div><div class="d">${diffTxt} (${fmtG(b.birth)} g)</div></div>
-      <div class="fact"><div class="k">Geburt</div><div class="v num">${b.day <= 28 ? "Tag " + b.day : Math.round(b.day / 7) + " Wochen"}</div><div class="d">${b.birthLabel}</div></div>`;
+    return `<div class="fact"><div class="k">Letztes Gewicht ${v.child} (${b.lastDay})</div><div class="v num">${fmtG(b.last)} g</div><div class="d">${diffTxt} (${fmtG(b.birth)} g)</div></div>`;
   }
 
   function nextCard() {
     const v = shownVisit();
     if (!v) {
       return `<section class="card next"><div class="label">${ic("checkc", "sm")} Alle Besuche erledigt</div>
-        <h2>Schön gemacht, ${D.me.first}!</h2><p class="muted">Alle fünf Besuche sind dokumentiert. Bis zur Schule hast du noch Zeit.</p>
+        <h2>Schön gemacht, ${D.me.first}!</h2><p class="muted">Alle ${D.visits.length} Besuche sind dokumentiert. Bis zur Schule hast du noch Zeit.</p>
         <div class="actions"><button class="btn primary" data-act="nav" data-k="route">${ic("route")} Morgen planen</button></div></section>`;
     }
     const st = S.status[v.id];
@@ -233,8 +232,7 @@
         </div>
         <div class="time"><div class="big num">${v.time}</div><div class="muted small num">bis ${v.until} · ${v.duration} min</div></div>
       </div>
-      <div class="addr">${ic("pin", "sm")} <span>${v.address} <span class="muted">· ${v.district}</span></span>
-        ${v.briefing ? `<span class="chip caution" style="margin-left:auto">${ic("phone", "xs")} Klingel defekt – anrufen</span>` : ""}</div>
+      <div class="addr">${ic("pin", "sm")} <span>${v.address} <span class="muted">· ${v.district}</span></span></div>
       ${banner}
       <div class="facts">${lastValueFact(v)}</div>
       <div class="actions">${actions}</div>
@@ -242,8 +240,8 @@
   }
 
   function tasksRow() {
-    return `<div class="tasks">${D.tasks.map((t) => `<button class="card task" data-act="task">
-      <span class="ic ${t.tone}">${ic(t.icon)}</span><span><span class="n num">${t.n}</span><div class="l">${t.label}</div></span></button>`).join("")}</div>`;
+    return `<div class="card tasks" aria-label="Offene Aufgaben">${D.tasks.map((t) => `<button class="task" data-act="task" title="${t.label} ${t.sub}">
+      <span class="ic ${t.tone}">${ic(t.icon, "sm")}</span><span class="l"><span class="num">${t.n}</span> ${t.label}</span></button>`).join("")}</div>`;
   }
 
   function heute() {
@@ -362,7 +360,7 @@
       const p = v.preg;
       const dsys = d.val.sys - p.lastSys, ddia = d.val.dia - p.lastDia;
       const bp = (d.touched.sys || d.touched.dia) && (d.val.sys >= 140 || d.val.dia >= 90)
-        ? `<div class="banner warning" style="margin-top:12px">${ic("alert", "sm")}<span><b>Warnung:</b> Blutdruck ${d.val.sys}/${d.val.dia} mmHg. In 15 Minuten erneut messen, Urin auf Eiweiß prüfen, ggf. Ärztin informieren.</span></div>` : "";
+        ? `<div class="banner warning" style="margin-top:16px">${ic("alert", "sm")}<span><b>Warnung:</b> Blutdruck ${d.val.sys}/${d.val.dia} mmHg. In 15 Minuten erneut messen, Urin auf Eiweiß prüfen, ggf. Ärztin informieren.</span></div>` : "";
       return `
       <section id="sec-vorsorge"><h2>${ic("user")} Vorsorge <span class="req-l">· SSW ${p.ssw} · ET ${p.et}</span></h2>
         <div class="grid2">
@@ -371,7 +369,7 @@
           ${stepper("mweight", "Gewicht Mutter", " kg", [0.1, 0.5], 1, `zuletzt ${fmt1(p.lastWeight)} kg`, `<span>seit ${p.lastDay}</span><b>${d.val.mweight - p.lastWeight >= 0 ? "+" : "−"}${fmt1(Math.abs(d.val.mweight - p.lastWeight))} kg</b>`)}
           <div class="card field"><div class="fl"><span>Befinden</span></div>${tiles("mood", [["gut"], ["müde"], ["ängstlich", 1], ["Beschwerden", 1]], false)}</div>
         </div>${bp}
-        <div class="card field" style="margin-top:12px"><div class="fl"><span>Beschwerden</span><span class="muted">Mehrfachauswahl</span></div>
+        <div class="card field" style="margin-top:16px"><div class="fl"><span>Beschwerden</span><span class="muted">Mehrfachauswahl</span></div>
           ${tiles("complaints", [["keine"], ["Ödeme", 1], ["Kopfschmerzen", 1], ["Senkwehen"], ["Rückenschmerzen"]], true)}</div>
       </section>
       <section id="sec-kind"><h2>${ic("heart")} Kind im Bauch</h2>
@@ -401,7 +399,7 @@
           <div class="card field"><div class="fl"><span>Haut</span></div>${tiles("skin", [["rosig"], ["leicht gelb"], ["deutlich gelb", 1]], false, ["rosig"])}</div>
           <div class="card field"><div class="fl"><span>Nabel</span></div>${tiles("navel", [["trocken"], ["nässt", 1], ["gerötet", 1], ["abgefallen"]], false)}</div>
         </div>
-        <div class="card field" style="margin-top:12px"><div class="fl"><span>Stuhl</span><span class="muted">zuletzt Übergangsstuhl</span></div>
+        <div class="card field" style="margin-top:16px"><div class="fl"><span>Stuhl</span><span class="muted">zuletzt Übergangsstuhl</span></div>
           ${tiles("stool", [["Mekonium"], ["Übergangsstuhl"], ["Muttermilchstuhl"], ["kein Stuhl seit 24 h", 1]], false, ["Übergangsstuhl"])}</div>
       </section>
       <section id="sec-mutter"><h2>${ic("user")} Mutter · ${v.mother.split(" ")[0]}</h2>
@@ -417,7 +415,7 @@
           ${stepper("feeds", "Mahlzeiten in 24 h", "×", [1], 0, `zuletzt ${b.lastFeeds}×`, `<span>seit ${b.lastDay}</span><b class="${d.val.feeds >= b.lastFeeds ? "up" : "down"}">${d.val.feeds - b.lastFeeds >= 0 ? "+" : "−"}${Math.abs(d.val.feeds - b.lastFeeds)}</b>`)}
           <div class="card field"><div class="fl"><span>Anlegen</span></div>${tiles("latch", [["selbstständig"], ["mit Hilfe"], ["Stillhütchen"]], false)}</div>
         </div>
-        <div class="card field" style="margin-top:12px"><div class="fl"><span>Brust</span><span class="muted">Mehrfachauswahl</span></div>
+        <div class="card field" style="margin-top:16px"><div class="fl"><span>Brust</span><span class="muted">Mehrfachauswahl</span></div>
           ${tiles("breast", [["gut"], ["Brustwarzen wund", 1], ["Milchstau", 1], ["Rhagaden", 1], ["Mastitis-Verdacht", 1]], true, b.lastBreast)}</div>
       </section>
       ${notesSection()}`;
