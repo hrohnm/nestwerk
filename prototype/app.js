@@ -183,7 +183,7 @@
     const v = shownVisit();
     if (!v) {
       return `<section class="card next"><div class="label">${ic("checkc", "sm")} Alle Besuche erledigt</div>
-        <h2>Schön gemacht, ${D.me.first}!</h2><p class="muted">Alle ${D.visits.length} Besuche sind dokumentiert. Bis zur Schule hast du noch Zeit.</p>
+        <h2>Schön gemacht, ${D.me.first}!</h2><p class="muted">Alle ${D.visits.length} Besuche sind dokumentiert. Bis zum Kurs in der Praxis hast du noch Zeit.</p>
         <div class="actions"><button class="btn primary" data-act="nav" data-k="route">${ic("route")} Morgen planen</button></div></section>`;
     }
     const st = S.status[v.id];
@@ -224,10 +224,10 @@
     const chips = [];
     if (v.substitute) chips.push(`<span class="chip vertretung-${v.substitute.key}">${ic("swap", "xs")} Vertretung für ${v.substitute.for}</span>`);
     return `<section class="card next" aria-label="Besuch">
-      ${label}
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">${label}${chips.join("")}</div>
       <div class="row">
         <div style="flex:1">
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2>${v.family}</h2>${chips.join("")}</div>
+          <h2>${v.family}</h2>
           <div class="who">${v.child ? `${v.mother.split(" ")[0]} & Baby ${v.child}` : v.mother} · ${v.reason}</div>
         </div>
         <div class="time"><div class="big num">${v.time}</div><div class="muted small num">bis ${v.until} · ${v.duration} min</div></div>
@@ -247,7 +247,7 @@
   function heute() {
     const n = openHandovers();
     const handoverBanner = n
-      ? `<div class="banner info">${ic("swap", "sm")}<span class="grow"><b>Lena ist ab 5. Oktober im Urlaub</b> – ${n === 1 ? "1 Übernahme wartet" : n + " Übernahmen warten"} auf deine Bestätigung.</span>
+      ? `<div class="banner info">${ic("swap", "sm")}<span class="grow"><b>${D.absence.first} ist ab ${D.absence.from} im Urlaub</b> – ${n === 1 ? "1 Übernahme wartet" : n + " Übernahmen warten"} auf deine Bestätigung.</span>
          <button class="btn text act" data-act="handover">Ansehen ${ic("right", "sm")}</button></div>`
       : "";
     return `${topbar("Heute", D.today)}
@@ -480,17 +480,17 @@
         </aside></div>`;
       case "handover":
         return `<div class="scrim" data-act="close"><aside class="panel" data-stop="1" aria-label="Übernahmen bestätigen">
-          <h2>Übernahmen von Lena <button class="icon-btn" data-act="close" aria-label="Schließen">${ic("x")}</button></h2>
-          <p class="muted" style="margin:0">Lena ist vom 5. bis 16. Oktober im Urlaub. Erst nach deiner Bestätigung bekommst du Zugriff auf die Akten.</p>
+          <h2>Übernahmen von ${D.absence.first} <button class="icon-btn" data-act="close" aria-label="Schließen">${ic("x")}</button></h2>
+          <p class="muted" style="margin:0">${D.absence.first} ist vom ${D.absence.range} im Urlaub. Erst nach deiner Bestätigung bekommst du Zugriff auf die Akten.</p>
           ${D.handovers.map((h) => {
             const st = S.handover[h.id];
             return `<div class="card handover">
-              <div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><h3>${h.family}</h3><span class="chip vertretung-lena">${ic("swap", "xs")} Vertretung für Lena</span></div>
+              <div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><h3>${h.family}</h3><span class="chip vertretung-${D.absence.key}">${ic("swap", "xs")} Vertretung für ${D.absence.first}</span></div>
               <div class="muted small">${h.who} · ${h.reason} · ${h.district}</div>
               <div class="small"><b>Nächster Besuch:</b> ${h.next} · ${h.detour}</div>
               <div class="briefing small"><b>Was ist wichtig?</b> ${esc(h.briefing)}</div>
               ${st === "open" ? `<div class="acts"><button class="btn secondary" data-act="ho" data-id="${h.id}" data-v="asked">Rückfrage</button><button class="btn primary" data-act="ho" data-id="${h.id}" data-v="accepted">${ic("check", "sm")} Übernehmen</button></div>`
-                : st === "accepted" ? `<span class="chip success">${ic("check", "xs")} Übernommen – Lena wird informiert</span>` : `<span class="chip caution">${ic("note", "xs")} Rückfrage an Lena gesendet</span>`}
+                : st === "accepted" ? `<span class="chip success">${ic("check", "xs")} Übernommen – ${D.absence.first} wird informiert</span>` : `<span class="chip caution">${ic("note", "xs")} Rückfrage an ${D.absence.first} gesendet</span>`}
             </div>`;
           }).join("")}
         </aside></div>`;
@@ -509,8 +509,8 @@
           <img src="assets/logo.png" alt="Praxislogo">
           <h1>Wer arbeitet gerade?</h1>
           <p class="muted" style="margin:-12px 0 0">Geteiltes Praxis-Tablet · Entsperren mit Face ID</p>
-          <div class="people">${D.team.map((t) => `<button class="card person" data-act="unlock" data-k="${t.key}">
-            <span class="avatar ${t.key}">${t.initials}</span>${t.name}<small>${t.key === "sarah" ? ic("face", "xs") + " Face ID" : t.info}</small></button>`).join("")}</div>
+          <div class="people">${D.team.map((t) => `<button class="card person ${t.active ? "" : "paused"}" data-act="unlock" data-k="${t.key}">
+            <span class="avatar ${t.key}">${t.initials}</span>${t.name}<small>${t.key === D.me.key ? ic("face", "xs") + " " : ""}${t.info}</small></button>`).join("")}</div>
         </div>`;
       default:
         return "";
@@ -523,12 +523,12 @@
     return `<div class="sign-wrap"><div class="sign" role="dialog" aria-label="Unterschrift">
       <div class="portrait-note">${ic("tablet", "xs")} Tablet zur Familie drehen</div>
       <h2>Bitte bestätigen Sie den heutigen Besuch</h2>
-      <p class="muted">Mit Ihrer Unterschrift bestätigen Sie, dass ${D.me.name} Sie heute besucht hat. Die Bestätigung geht an die Abrechnungsstelle HebSet.</p>
+      <p class="muted">Mit Ihrer Unterschrift bestätigen Sie, dass ${D.me.name} von der ${D.practice.name} Sie heute besucht hat. Die Bestätigung geht an die Abrechnungsstelle HebSet.</p>
       <dl class="sum">
         <dt>Leistung</dt><dd>${leistung}</dd>
         <dt>Datum</dt><dd>Donnerstag, 01.10.2026</dd>
         <dt>Uhrzeit</dt><dd class="num">${v.time}–${v.until} Uhr (${v.duration} Minuten)</dd>
-        <dt>Hebamme</dt><dd>${D.me.name}${v.substitute ? ` (Vertretung für ${v.substitute.for} Yilmaz)` : ""}</dd>
+        <dt>Hebamme</dt><dd>${D.me.name}${v.substitute ? ` (Vertretung für ${v.substitute.full})` : ""}</dd>
         <dt>Versicherte</dt><dd>${v.mother}</dd>
       </dl>
       <div class="pad"><canvas id="pad"></canvas><div class="hint"><span>Unterschrift ${v.mother}</span><span>${ic("pen", "xs")}</span></div></div>
@@ -564,7 +564,7 @@
   function protoBar() {
     const steps = ["Heute", "Navigation", "Ankunft", "Dokumentieren", "Unterschrift", "Nächster Besuch"];
     const cur = flowStep();
-    return `<img src="assets/logo.png" alt=""><b>Nestwerk</b><span class="proto-sub">Klick-Prototyp · Tablet quer</span>
+    return `<img src="assets/logo.png" alt=""><b>Nestwerk</b><span class="proto-sub">Klick-Prototyp für ${D.practice.name}</span>
       <div class="proto-steps">${steps.map((s, i) => `<span class="proto-step ${i === cur ? "on" : i < cur ? "done" : ""}">${i + 1}. ${s}</span>`).join("")}</div>
       <span class="spacer"></span>
       <button class="proto-btn" data-act="theme">${ic(theme === "dark" ? "sun" : "moon", "xs")} ${theme === "dark" ? "Hell" : "Dunkel"}</button>
@@ -705,14 +705,16 @@
     handover() { S.overlay = "handover"; },
     ho(el) {
       S.handover[el.dataset.id] = el.dataset.v;
-      if (!openHandovers()) toast("Alle Übernahmen beantwortet – Lena wird informiert.", "swap");
+      if (!openHandovers()) toast(`Alle Übernahmen beantwortet – ${D.absence.first} wird informiert.`, "swap");
     },
     menu() { S.overlay = S.overlay === "menu" ? null : "menu"; },
     theme() { theme = theme === "dark" ? "light" : "dark"; localSet("nw-theme", theme); if (S.overlay === "menu") S.overlay = null; },
     lock() { S.overlay = "lock"; },
     unlock(el) {
-      if (el.dataset.k !== "sarah") { toast("Im Prototyp ist nur Sarahs Arbeitstag hinterlegt.", "info"); return; }
-      S.overlay = null; toast("Willkommen zurück, Sarah.", "face");
+      const who = D.team.find((t) => t.key === el.dataset.k);
+      if (!who.active) { toast(`${who.name.split(" ")[0]} ist ${who.info} – ihr Zugang ist pausiert.`, "info"); return; }
+      if (who.key !== D.me.key) { toast(`Im Prototyp ist nur ${D.me.first}s Arbeitstag hinterlegt.`, "info"); return; }
+      S.overlay = null; toast(`Willkommen zurück, ${D.me.first}.`, "face");
     },
     task() { toast("Aufgabenliste folgt im nächsten Prototyp-Schritt.", "info"); },
     close() { S.overlay = null; },

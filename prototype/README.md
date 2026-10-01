@@ -1,6 +1,6 @@
 # Nestwerk – Klick-Prototyp (POC)
 
-Klickbarer Prototyp für das Tablet im Querformat (iPad 11″, 1194 × 834) nach dem [Design-Briefing](../docs/Design-Briefing_Nestwerk.md). Reines HTML/CSS/JS ohne Build-Schritt.
+Klickbarer Prototyp für die Hebammenpraxis Kindkesmöön in Bad Doberan, für das Tablet im Querformat (iPad 11″, 1194 × 834) nach dem [Design-Briefing](../docs/Design-Briefing_Nestwerk.md). Reines HTML/CSS/JS ohne Build-Schritt.
 
 ## Starten
 
@@ -20,7 +20,7 @@ cd prototype && python3 -m http.server 8000
 5. **Unterschrift** – Zusammenfassung der Leistung, Unterschriftsfeld (Finger/Stift/Maus), „Neu“ und „Bestätigen“
 6. **Zurück zu Heute** – Besuch abgehakt, nächster Besuch steht oben
 
-Außerdem: Übernahmen von Lena bestätigen (Banner „Ansehen“), Vertretung für Miriam bei Familie Nguyen, Antippen einzelner Stopps in der Route, Dunkelmodus, Sperrbildschirm „Wer arbeitet gerade?“ (Avatar oben rechts). Route, Betreute, Kalender und Praxis sind Platzhalter.
+Außerdem: Übernahmen von Johanna bestätigen (Banner „Ansehen“), Vertretung für Johanna bei Familie Nguyen, Antippen einzelner Stopps in der Route, Dunkelmodus, Sperrbildschirm „Wer arbeitet gerade?“ (Avatar oben rechts). Route, Betreute, Kalender und Praxis sind Platzhalter.
 
 Tipp zum Ausprobieren der Warnung: im Besuch bei Mila das Gewicht auf unter 3.042 g senken (> 10 % Verlust).
 
@@ -30,6 +30,6 @@ Tipp zum Ausprobieren der Warnung: im Besuch bei Mila das Gewicht auf unter 3.04
 | --- | --- |
 | `index.html` | Einstieg, lädt Schriften (Nunito Sans, Fraunces) |
 | `styles.css` | Design-Tokens hell/dunkel und alle Komponenten |
-| `data.js` | Beispieldaten aus dem Briefing (Stichtag 1. Oktober 2026) |
+| `data.js` | Beispieldaten: echtes Team, erfundene Familien in Bad Doberan und Umgebung (Stichtag 1. Oktober 2026) |
 | `app.js` | Zustand, Screens und Interaktionen |
 | `assets/logo.png` | Praxislogo |
