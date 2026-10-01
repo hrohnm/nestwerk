@@ -73,6 +73,11 @@
     handover: Object.fromEntries(D.handovers.map((h) => [h.id, "open"])), // open | accepted | asked
     toast: null,
     clock: "08:30",
+    hist: [],                  // Rücksprung-Stapel für Akte/Urkunde
+    akteId: null,
+    akteTab: "overview",       // overview | timeline | docs
+    measured: {},              // beim Besuch erfasste Werte je Familie (für Akte und Urkunde)
+    cert: null,                // { id, style, text, editing }
   });
   let S = initial();
   let theme = localGet("nw-theme") || "light";
@@ -232,7 +237,8 @@
         </div>
         <div class="time"><div class="big num">${v.time}</div><div class="muted small num">bis ${v.until} · ${v.duration} min</div></div>
       </div>
-      <div class="addr">${ic("pin", "sm")} <span>${v.address} <span class="muted">· ${v.district}</span></span></div>
+      <div class="addr">${ic("pin", "sm")} <span>${v.address}${v.district.startsWith(v.address.split(" ").pop()) ? "" : ` <span class="muted">· ${v.district}</span>`}</span>
+        <button class="btn text small akte-link" data-act="akte" data-id="${v.id}">${ic("file", "sm")} Akte</button></div>
       ${banner}
       <div class="facts">${lastValueFact(v)}</div>
       <div class="actions">${actions}</div>
@@ -240,7 +246,7 @@
   }
 
   function tasksRow() {
-    return `<div class="card tasks" aria-label="Offene Aufgaben">${D.tasks.map((t) => `<button class="task" data-act="task" title="${t.label} ${t.sub}">
+    return `<div class="card tasks" aria-label="Offene Aufgaben">${D.tasks.map((t) => `<button class="task" data-act="${t.act || "task"}" ${t.id ? `data-id="${t.id}"` : ""} title="${t.label} ${t.sub}">
       <span class="ic ${t.tone}">${ic(t.icon, "sm")}</span><span class="l"><span class="num">${t.n}</span> ${t.label}</span></button>`).join("")}</div>`;
   }
 
@@ -513,7 +519,7 @@
             <span class="avatar ${t.key}">${t.initials}</span>${t.name}<small>${t.key === D.me.key ? ic("face", "xs") + " " : ""}${t.info}</small></button>`).join("")}</div>
         </div>`;
       default:
-        return "";
+        return NW.overlays[S.overlay] ? NW.overlays[S.overlay]() : "";
     }
   }
 
@@ -571,6 +577,17 @@
       <button class="proto-btn" data-act="reset">${ic("reset", "xs")} Neu starten</button>`;
   }
 
+  // ---------- Erweiterungen (akte.js registriert weitere Screens) ----------
+  const NW = (window.NW = window.NW || {});
+  Object.assign(NW, {
+    D, ic, esc, fmtG, fmt1, fmtNum, toast, visitById, topbar,
+    render: () => render(),
+    get S() { return S; },
+  });
+  NW.screens = NW.screens || {};
+  NW.overlays = NW.overlays || {};
+  NW.actions = NW.actions || {};
+
   // ---------- Render ----------
   const $device = document.getElementById("device");
   const $bar = document.getElementById("proto-bar");
@@ -584,6 +601,7 @@
     let main;
     if (S.screen === "besuch") main = besuch();
     else if (S.screen === "placeholder") main = placeholder();
+    else if (NW.screens[S.screen]) main = NW.screens[S.screen]();
     else main = heute();
 
     $device.innerHTML = `${sidebar()}<main class="main">${main}</main>${overlay()}
@@ -638,7 +656,8 @@
     nav(el) {
       const k = el.dataset.k;
       S.nav = k; S.overlay = null;
-      S.screen = k === "heute" ? "heute" : "placeholder";
+      S.screen = k === "heute" ? "heute" : NW.screens[k] ? k : "placeholder";
+      S.hist = [];
       if (k === "heute") S.selected = null;
     },
     select(el) { S.selected = el.dataset.id || null; },
@@ -695,6 +714,7 @@
       const s = Math.floor((Date.now() - S.doc.start) / 1000);
       const dur = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")} min`;
       S.durations[v.id] = `in ${dur} erfasst`;
+      S.measured[v.id] = { val: { ...S.doc.val }, touched: { ...S.doc.touched } };
       S.status[v.id] = "done";
       S.overlay = null; S.screen = "heute"; S.nav = "heute"; S.selected = null; S.doc = null;
       S.clock = v.until;
@@ -726,7 +746,7 @@
     if (!el) return;
     // Klicks innerhalb eines Panels nicht als "Schließen" werten
     if (el.dataset.act === "close" && el.classList.contains("scrim") && e.target !== el) return;
-    const fn = actions[el.dataset.act];
+    const fn = actions[el.dataset.act] || NW.actions[el.dataset.act];
     if (!fn) return;
     const res = fn(el, e);
     if (res !== false) render();
@@ -748,6 +768,6 @@
   }
   window.addEventListener("resize", fit);
 
-  render();
-  fit();
+  // Erst rendern, wenn alle Skripte (z. B. akte.js) geladen sind
+  window.addEventListener("DOMContentLoaded", () => { render(); fit(); });
 })();

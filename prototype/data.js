@@ -64,7 +64,7 @@ window.NW_DATA = {
 
   tasks: [
     { n: 2, label: "Dokus offen", sub: "von Montag und Dienstag", icon: "file", tone: "c" },
-    { n: 1, label: "Urkunde", sub: "fällig für Jonas Krüger", icon: "award", tone: "a" },
+    { n: 1, label: "Urkunde", sub: "fällig für Jonas Krüger", icon: "award", tone: "a", act: "urkunde", id: "krueger" },
     { n: 3, label: "Unterschriften", sub: "fehlen auf HebSet-Bögen", icon: "pen", tone: "p" },
   ],
 
